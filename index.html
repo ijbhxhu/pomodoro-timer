@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的專注小助手 - 音樂版</title>
+    <style>
+        :root {
+            --bg-color: #e3f2fd;
+            --main-color: #448aff;
+            --button-hover: #2979ff;
+        }
+
+        .blue-theme {
+            --bg-color: #e3f2fd;
+            --main-color: #448aff;
+            --button-hover: #2979ff;
+        }
+
+        .pink-theme {
+            --bg-color: #fff1f2;
+            --main-color: #f472b6;
+            --button-hover: #db2777;
+        }
+
+        body {
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-color);
+            transition: 0.5s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .card {
+            background: white;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 40px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .theme-switch {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .mode-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            background: var(--bg-color);
+            color: var(--main-color);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .timer {
+            font-size: 80px;
+            font-weight: 900;
+            color: var(--main-color);
+            margin: 10px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 音樂選擇器樣式 */
+        .music-selector {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            outline: none;
+            width: 80%;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        button {
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-main { background: var(--main-color); color: white; flex-grow: 2; }
+        .btn-reset { background: #eee; color: #777; flex-grow: 1; }
+
+        .message { margin-top: 20px; color: #888; font-size: 14px; }
+
+        .working { animation: pulse 2s infinite ease-in-out; }
+
+        /* 新增樣式 */
+        .time-settings {
+            margin: 20px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .time-settings label {
+            display: inline-block;
+            margin: 0 10px;
+            font-size: 14px;
+        }
+
+        .time-settings input {
+            width: 50px;
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .volume-control {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats {
+            margin-top: 15px;
+            font-size: 16px;
+            color: var(--main-color);
+            font-weight: bold;
+        }
+
+        @media (max-width: 600px) {
+            .btn-group {
+                flex-direction: column;
+            }
+            .btn-group button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="blue-theme">
+
+<div class="card">
+    <div class="theme-switch">
+        <div class="dot" style="background: #f472b6;" onclick="setTheme('pink')"></div>
+        <div class="dot" style="background: #448aff;" onclick="setTheme('blue')"></div>
+    </div>
+
+    <div id="modeBadge" class="mode-badge">📝 讀書時間</div>
+    <div id="timerDisplay" class="timer">25:00</div>
+
+    <div class="time-settings">
+        <p style="font-size: 12px; margin: 0 0 5px 0; color: #666;">⏰ 自訂時間 (分鐘)</p>
+        <label>工作: <input type="number" id="workTime" value="25" min="1" max="60"></label>
+        <label>休息: <input type="number" id="breakTime" value="5" min="1" max="30"></label>
+    </div>
+
+    <div class="music-selector">
+        <p style="font-size: 12px; margin: 0 0 5px 0; color: #666;">🎵 專注背景音</p>
+        <select id="bgmSelect" onchange="changeMusic()">
+            <option value="">(無背景音)</option>
+            <option value="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">輕音樂 1</option>
+            <option value="https://actions.google.com/sounds/v1/water/rain_on_roof.ogg">舒緩雨聲</option>
+            <option value="https://actions.google.com/sounds/v1/ambiences/forest_morning_birds.ogg">森林鳥鳴</option>
+        </select>
+        <div class="volume-control">
+            <span>🔊</span>
+            <input type="range" id="volumeControl" min="0" max="1" step="0.1" value="0.5" onchange="setVolume()">
+            <button onclick="toggleMute()">靜音</button>
+        </div>
+    </div>
+    
+    <div class="btn-group">
+        <button id="startBtn" class="btn-main" onclick="toggleTimer()">開始學習</button>
+        <button class="btn-reset" onclick="reset()">重設</button>
+    </div>
+
+    <div id="message" class="message">準備好迎接充滿成就感的一天了嗎？</div>
+    <div id="stats" class="stats">今日蕃茄: 0</div>
+</div>
+
+<audio id="bgmPlayer" loop></audio>
+
+<script>
+    let timeLeft = 25 * 60;
+    let timerId = null;
+    let isRunning = false;
+    let currentMode = 'work';
+    let pomodoroCount = 0;
+    let isMuted = false;
+
+    const display = document.getElementById('timerDisplay');
+    const startBtn = document.getElementById('startBtn');
+    const modeBadge = document.getElementById('modeBadge');
+    const msg = document.getElementById('message');
+    const bgmPlayer = document.getElementById('bgmPlayer');
+    const bgmSelect = document.getElementById('bgmSelect');
+    const workTimeInput = document.getElementById('workTime');
+    const breakTimeInput = document.getElementById('breakTime');
+    const volumeControl = document.getElementById('volumeControl');
+    const stats = document.getElementById('stats');
+
+    // 載入儲存狀態
+    function loadState() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) setTheme(savedTheme);
+
+        const savedWorkTime = localStorage.getItem('workTime');
+        if (savedWorkTime) workTimeInput.value = savedWorkTime;
+
+        const savedBreakTime = localStorage.getItem('breakTime');
+        if (savedBreakTime) breakTimeInput.value = savedBreakTime;
+
+        const savedCount = localStorage.getItem('pomodoroCount');
+        if (savedCount) {
+            pomodoroCount = parseInt(savedCount);
+            updateStats();
+        }
+
+        const savedVolume = localStorage.getItem('volume');
+        if (savedVolume) {
+            volumeControl.value = savedVolume;
+            bgmPlayer.volume = savedVolume;
+        }
+    }
+
+    // 儲存狀態
+    function saveState() {
+        localStorage.setItem('theme', document.body.className.replace('-theme', ''));
+        localStorage.setItem('workTime', workTimeInput.value);
+        localStorage.setItem('breakTime', breakTimeInput.value);
+        localStorage.setItem('pomodoroCount', pomodoroCount);
+        localStorage.setItem('volume', volumeControl.value);
+    }
+
+    // 請求通知權限
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    loadState();
+
+    // 監聽輸入變化
+    workTimeInput.addEventListener('change', saveState);
+    breakTimeInput.addEventListener('change', saveState);
+
+    function setTheme(theme) {
+        document.body.className = theme + '-theme';
+        saveState();
+    }
+
+    function changeMusic() {
+        const selectedSrc = bgmSelect.value;
+        if (selectedSrc) {
+            bgmPlayer.src = selectedSrc;
+            if (isRunning && !isMuted) bgmPlayer.play();
+        } else {
+            bgmPlayer.pause();
+            bgmPlayer.src = "";
+        }
+    }
+
+    function setVolume() {
+        bgmPlayer.volume = volumeControl.value;
+        saveState();
+    }
+
+    function toggleMute() {
+        isMuted = !isMuted;
+        bgmPlayer.muted = isMuted;
+        if (isRunning && !isMuted && bgmSelect.value) bgmPlayer.play();
+    }
+
+    function updateStats() {
+        stats.textContent = `今日蕃茄: ${pomodoroCount}`;
+    }
+
+    function toggleTimer() {
+        if (isRunning) {
+            clearInterval(timerId);
+            startBtn.textContent = currentMode === 'work' ? '繼續學習' : '繼續休息';
+            msg.textContent = '暫停中，深呼吸一下！';
+            display.classList.remove('working');
+            bgmPlayer.pause();
+        } else {
+            timerId = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                if (timeLeft <= 0) {
+                    clearInterval(timerId);
+                    handleTimeUp();
+                }
+            }, 1000);
+            startBtn.textContent = '暫停';
+            msg.textContent = currentMode === 'work' ? '加油，你是最棒的！' : '好好放鬆眼睛吧～';
+            display.classList.add('working');
+            if (bgmSelect.value && !isMuted) bgmPlayer.play();
+        }
+        isRunning = !isRunning;
+        saveState();
+    }
+
+    function handleTimeUp() {
+        isRunning = false;
+        bgmPlayer.pause();
+        display.classList.remove('working');
+        
+        if (currentMode === 'work') {
+            pomodoroCount++;
+            updateStats();
+            saveState();
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('🎉 專注完成！', { body: '你完成了 25 分鐘的專注！' });
+            } else {
+                alert('🎉 太厲害了！你完成了 25 分鐘的專注！');
+            }
+            if (confirm('要開始 5 分鐘的休息時間嗎？')) {
+                startBreak();
+            } else {
+                reset();
+            }
+        } else {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('☕ 休息結束！', { body: '準備好開始下一段學習了嗎？' });
+            } else {
+                alert('☕ 休息結束！準備好開始下一段學習了嗎？');
+            }
+            reset();
+        }
+    }
+
+    function startBreak() {
+        currentMode = 'break';
+        timeLeft = parseInt(breakTimeInput.value) * 60;
+        modeBadge.textContent = '☕ 休息時間';
+        modeBadge.style.background = '#fff7ed';
+        modeBadge.style.color = '#ffb74d';
+        updateDisplay();
+        toggleTimer();
+    }
+
+    function reset() {
+        clearInterval(timerId);
+        bgmPlayer.pause();
+        isRunning = false;
+        currentMode = 'work';
+        timeLeft = parseInt(workTimeInput.value) * 60;
+        modeBadge.textContent = '📝 讀書時間';
+        modeBadge.style.background = '';
+        modeBadge.style.color = '';
+        startBtn.textContent = '開始學習';
+        msg.textContent = '準備好迎接充滿成就感的一天了嗎？';
+        display.classList.remove('working');
+        updateDisplay();
+        saveState();
+    }
+</script>
+
+</body>
+</html>
